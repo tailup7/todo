@@ -40,3 +40,42 @@ todo/
   │           └─ java/
   └─ target/                                                             # Maven生成。Gitには含めない
 ```
+
+#
+
+## DB接続方法
+このアプリケーションでは、PostgreSQLへの接続方法として`direct`と`jndi`の2種類を利用できる。
+
+- 方法1: direct
+    - DriverManagerを使用してPostgreSQLへ直接接続する
+        - PowerShellで以下の環境変数を設定する
+          ```
+            $env:TODO_DB_MODE = "direct"
+            $env:TODO_DB_URL = "jdbc:postgresql://127.0.0.1:5432/todo"
+            $env:TODO_DB_USER = "todo_app"
+            $env:TODO_DB_PASSWORD = "<todo_appユーザに設定した実際のパスワード>"
+          ```
+      directモードでTomcatを起動する場合は、上記環境変数を設定したPowerShellからTomcatを起動する。
+      ```powershell
+        ├─ TODO_DB_MODE 
+        ├─ TODO_DB_URL 
+        ├─ TODO_DB_USER 
+        └─ TODO_DB_PASSWORD 
+                │ 
+                ▼ 
+              Tomcat 
+                │ 
+                ▼ 
+              Database.java 
+                │ 
+                ▼ 
+              DriverManager 
+                │ 
+                ▼ 
+              PostgreSQL
+      ```
+
+- 方法2: jndi
+    - TomcatのJNDI DataSourceを使用してPostgreSQLへ接続する
+    - TODO_DB_* は不要
+    - Tomcat側に jdbc/TodoDB を設定
