@@ -1,0 +1,12 @@
+-- db/00_database.psql
+--
+-- psql 用スクリプト。
+-- パスワードをファイルに書かず、\password で対話的に設定する。
+
+CREATE ROLE todo_app LOGIN;
+
+\password todo_app
+
+CREATE DATABASE todo
+    OWNER todo_app
+    ENCODING 'UTF8';
