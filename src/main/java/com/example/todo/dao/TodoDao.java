@@ -1,3 +1,6 @@
+// DAO : Data Access Object。Todoデータをデータベースなどから取得・保存するための操作方法を定義したインターフェース
+// TodoDao インターフェースにて、TodoデータのCRUD操作を定義し、
+// その裏側でJdbcTodoDaoがSQL文によって実際のデータベース操作を行う。
 package com.example.todo.dao;
 
 import com.example.todo.model.Todo;

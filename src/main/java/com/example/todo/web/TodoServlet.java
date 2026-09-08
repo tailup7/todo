@@ -26,12 +26,40 @@ public final class TodoServlet
 
         // overrideは、親クラス(今回はHttpSevlet)のメソッドを子クラス側で定義しなおすこと。
         @Override
+        // initメソッド : Tomcatによって生成されたServletを、利用可能な状態に初期化する。
         public void init()
                 throws ServletException {
 
+        // getServletContext()は、webアプリケーション全体で共有される`ServletContext`を取得するメソッド。
+        // ServletContextには、アプリケーション全体で共有したい情報を`attribute`として保存できる。
         Object value =
                 getServletContext()
                         .getAttribute("todoDao");
+        // 右辺でやっていることは、ServletContextに`todoDao`という名前で保存されているオブジェクトを取得している
+        // ちなみに、servletContext.setAttribute("todoDao", todoDao);という処理は、AppContextListener.javaの
+        // contextInitializedメソッドで行われている。
+        // つまり、TodoServletのinit()メソッドが実行される時点までに、AppContextListenerのcontextInitializedメソッドが実行されているので、
+        // todoDaoはすでにServletContextに保存されている。
+        // 典型的な流れは以下のようになる。
+        // TomcatがWebアプリを起動
+        //         ↓
+        // AppContextListener生成
+        //         ↓
+        // contextInitialized() 実行
+        //         ↓
+        // TodoDaoを生成
+        //         ↓
+        // ServletContext.setAttribute(
+        //     "todoDao", todoDao
+        // )
+        //         ↓
+        // TodoServlet生成・初期化
+        //         ↓
+        // TodoServlet.init() 実行
+        //         ↓
+        // getAttribute("todoDao")
+        //         ↓
+        // this.todoDao にセット
 
         if (!(value instanceof TodoDao)) {
                 throw new ServletException(
