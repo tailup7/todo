@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app
+    xmlns="https://jakarta.ee/xml/ns/jakartaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        https://jakarta.ee/xml/ns/jakartaee
+        https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+    version="6.0">
+
+    <display-name>
+        todo
+    </display-name>
+
+    <!--
+        デフォルトはTomcat JNDI。
+        TODO_DB_MODE環境変数があればそちらを優先する。
+    -->
+    <context-param>
+
+        <param-name>
+            db.mode
+        </param-name>
+
+        <param-value>
+            jndi
+        </param-value>
+
+    </context-param>
+
+    <listener>
+
+        <listener-class>
+            com.example.todo.web.AppContextListener
+        </listener-class>
+
+    </listener>
+
+    <filter>
+
+        <filter-name>
+            CsrfFilter
+        </filter-name>
+
+        <filter-class>
+            com.example.todo.web.CsrfFilter
+        </filter-class>
+
+    </filter>
+
+    <filter-mapping>
+
+        <filter-name>
+            CsrfFilter
+        </filter-name>
+
+        <url-pattern>
+            /todos/*
+        </url-pattern>
+
+    </filter-mapping>
+
+    <servlet>
+
+        <servlet-name>
+            TodoServlet
+        </servlet-name>
+
+        <servlet-class>
+            com.example.todo.web.TodoServlet
+        </servlet-class>
+
+        <load-on-startup>
+            1
+        </load-on-startup>
+
+    </servlet>
+
+    <servlet-mapping>
+
+        <servlet-name>
+            TodoServlet
+        </servlet-name>
+
+        <url-pattern>
+            /todos/*
+        </url-pattern>
+
+    </servlet-mapping>
+
+    <resource-ref>
+
+        <description>
+            PostgreSQL Todo DataSource
+        </description>
+
+        <res-ref-name>
+            jdbc/TodoDB
+        </res-ref-name>
+
+        <res-type>
+            javax.sql.DataSource
+        </res-type>
+
+        <res-auth>
+            Container
+        </res-auth>
+
+    </resource-ref>
+
+    <error-page>
+
+        <error-code>
+            404
+        </error-code>
+
+        <location>
+            /WEB-INF/views/error.jsp
+        </location>
+
+    </error-page>
+
+    <error-page>
+
+        <error-code>
+            500
+        </error-code>
+
+        <location>
+            /WEB-INF/views/error.jsp
+        </location>
+
+    </error-page>
+
+    <session-config>
+
+        <cookie-config>
+
+            <http-only>
+                true
+            </http-only>
+
+        </cookie-config>
+
+    </session-config>
+
+</web-app>
