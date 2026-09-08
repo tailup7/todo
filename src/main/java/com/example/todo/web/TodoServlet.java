@@ -1,3 +1,5 @@
+// Controllerにあたるクラス。Controllerは、ユーザーのHTTPリクエストを受け取り、適切な処理を呼び出し、HTTPレスポンスを返す役割を持つ。
+
 package com.example.todo.web;
 
 import com.example.todo.dao.TodoDao;
@@ -16,27 +18,29 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+// extendsは、継承を意味する。HttpServletを継承している。
 public final class TodoServlet
         extends HttpServlet {
+        // メンバ変数todoDaoの宣言
+        private TodoDao todoDao;
 
-    private TodoDao todoDao;
-
-    @Override
-    public void init()
-            throws ServletException {
+        // overrideは、親クラス(今回はHttpSevlet)のメソッドを子クラス側で定義しなおすこと。
+        @Override
+        public void init()
+                throws ServletException {
 
         Object value =
                 getServletContext()
                         .getAttribute("todoDao");
 
         if (!(value instanceof TodoDao)) {
-            throw new ServletException(
-                    "TodoDao is not initialized"
-            );
+                throw new ServletException(
+                        "TodoDao is not initialized"
+                );
         }
 
         this.todoDao = (TodoDao) value;
-    }
+        }
 
     @Override
     protected void doGet(
