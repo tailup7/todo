@@ -5,7 +5,7 @@ todo/
   ├─ pom.xml
   ├─ .gitignore
   ├─ README.md
-  ├─ db/
+  ├─ db/                                                  # DB作成・スキーマ・初期データ
   │     ├─ 00_database.psql
   │     ├─ 01_schema.sql
   │     └─ 02_seed.sql
@@ -15,18 +15,26 @@ todo/
   │     │     │     └─ com/
   │     │     │           └─ example/
   │     │     │                 └─ todo/
-  │     │     │                       ├─ model/                          # Model
+  │     │     │                       ├─ model/                          # ドメインモデル
   │     │     │                       │     └─ Todo.java
-  │     │     │                       ├─ dao/                            # データアクセス層
-  │     │     │                       │     ├─ TodoDao.java   
-  │     │     │                       │     └─ JdbcTodoDao.java
-  │     │     │                       ├─ db/                             # DB接続基盤
-  │     │     │                       │     ├─ ConnectionProvider.java   
-  │     │     │                       │     └─ Database.java             
+  │     │     │                       ├─ controller/                     # Controller
+  │     │     │                       │     └─ TodoServlet.java
+  │     │     │                       ├─ service/                        # 業務処理・入力検証
+  │     │     │                       │     ├─ TodoService.java
+  │     │     │                       │     ├─ TodoServiceImpl.java
+  │     │     │                       │     ├─ TodoNotFoundException.java
+  │     │     │                       │     └─ ValidationException.java
+  │     │     │                       ├─ repository/                     # データアクセス層
+  │     │     │                       │     ├─ TodoRepository.java
+  │     │     │                       │     ├─ JdbcTodoRepository.java
+  │     │     │                       │     └─ RepositoryException.java
+  │     │     │                       ├─ database/                       # DB接続基盤
+  │     │     │                       │     ├─ ConnectionProvider.java
+  │     │     │                       │     └─ Database.java
+  │     │     │                       ├─ config/                         # 依存関係の組み立て
+  │     │     │                       │     └─ AppContextListener.java
   │     │     │                       └─ web/
-  │     │     │                             ├─ AppContextListener.java
-  │     │     │                             ├─ CsrfFilter.java
-  │     │     │                             └─ TodoServlet.java          # Controller
+  │     │     │                             └─ CsrfFilter.java
   │     │     ├─ resources/
   │     │     │     └─ logging.properties
   │     │     └─ webapp/

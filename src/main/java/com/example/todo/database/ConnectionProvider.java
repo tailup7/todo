@@ -1,4 +1,4 @@
-package com.example.todo.db;
+package com.example.todo.database;
 
 import java.sql.Connection;
 import java.sql.SQLException;

@@ -1,6 +1,6 @@
-package com.example.todo.dao;
+package com.example.todo.repository;
 
-import com.example.todo.db.ConnectionProvider;
+import com.example.todo.database.ConnectionProvider;
 import com.example.todo.model.Todo;
 
 import java.sql.Connection;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public final class JdbcTodoDao implements TodoDao {
+public final class JdbcTodoRepository implements TodoRepository {
 
     private static final String SELECT_COLUMNS = """
             SELECT
@@ -29,12 +29,12 @@ public final class JdbcTodoDao implements TodoDao {
 
     private final ConnectionProvider connectionProvider;
 
-    public JdbcTodoDao(ConnectionProvider connectionProvider) {
+    public JdbcTodoRepository(ConnectionProvider connectionProvider) {
         this.connectionProvider = connectionProvider;
     }
 
     @Override
-    public List<Todo> findAll() throws SQLException {
+    public List<Todo> findAll() {
 
         String sql = SELECT_COLUMNS + """
                  ORDER BY id DESC
@@ -56,14 +56,15 @@ public final class JdbcTodoDao implements TodoDao {
             while (resultSet.next()) {
                 todos.add(map(resultSet));
             }
+        } catch (SQLException e) {
+            throw new RepositoryException("Failed to find todos", e);
         }
 
         return todos;
     }
 
     @Override
-    public Optional<Todo> findById(long id)
-            throws SQLException {
+    public Optional<Todo> findById(long id) {
 
         String sql = SELECT_COLUMNS + """
                  WHERE id = ?
@@ -87,12 +88,13 @@ public final class JdbcTodoDao implements TodoDao {
 
                 return Optional.of(map(resultSet));
             }
+        } catch (SQLException e) {
+            throw new RepositoryException("Failed to find todo: " + id, e);
         }
     }
 
     @Override
-    public void create(Todo todo)
-            throws SQLException {
+    public void create(Todo todo) {
 
         String sql = """
                 INSERT INTO todo (
@@ -123,12 +125,13 @@ public final class JdbcTodoDao implements TodoDao {
                                 + updatedRows
                 );
             }
+        } catch (SQLException e) {
+            throw new RepositoryException("Failed to create todo", e);
         }
     }
 
     @Override
-    public boolean update(Todo todo)
-            throws SQLException {
+    public boolean update(Todo todo) {
 
         String sql = """
                 UPDATE todo
@@ -153,12 +156,14 @@ public final class JdbcTodoDao implements TodoDao {
             statement.setLong(4, todo.getId());
 
             return statement.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new RepositoryException(
+                    "Failed to update todo: " + todo.getId(), e);
         }
     }
 
     @Override
-    public boolean delete(long id)
-            throws SQLException {
+    public boolean delete(long id) {
 
         String sql = """
                 DELETE FROM todo
@@ -176,6 +181,8 @@ public final class JdbcTodoDao implements TodoDao {
             statement.setLong(1, id);
 
             return statement.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new RepositoryException("Failed to delete todo: " + id, e);
         }
     }
 

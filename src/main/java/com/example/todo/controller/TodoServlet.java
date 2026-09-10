@@ -1,9 +1,12 @@
 // Controllerにあたるクラス。Controllerは、ユーザーのHTTPリクエストを受け取り、適切な処理を呼び出し、HTTPレスポンスを返す役割を持つ。
 
-package com.example.todo.web;
+package com.example.todo.controller;
 
-import com.example.todo.dao.TodoDao;
 import com.example.todo.model.Todo;
+import com.example.todo.repository.RepositoryException;
+import com.example.todo.service.TodoNotFoundException;
+import com.example.todo.service.TodoService;
+import com.example.todo.service.ValidationException;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -12,17 +15,13 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-import java.sql.SQLException;
-
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 
 // extendsは、継承を意味する。HttpServletを継承している。
 public final class TodoServlet
         extends HttpServlet {
-        // メンバ変数todoDaoの宣言
-        private TodoDao todoDao;
+        // メンバ変数todoServiceの宣言
+        private TodoService todoService;
 
         // overrideは、親クラス(今回はHttpSevlet)のメソッドを子クラス側で定義しなおすこと。
         @Override
@@ -34,12 +33,12 @@ public final class TodoServlet
         // ServletContextには、アプリケーション全体で共有したい情報を`attribute`として保存できる。
         Object value =
                 getServletContext()
-                        .getAttribute("todoDao");
-        // 右辺でやっていることは、ServletContextに`todoDao`という名前で保存されているオブジェクトを取得している
-        // ちなみに、servletContext.setAttribute("todoDao", todoDao);という処理は、AppContextListener.javaの
+                        .getAttribute("todoService");
+        // 右辺でやっていることは、ServletContextに`todoService`という名前で保存されているオブジェクトを取得している
+        // ちなみに、servletContext.setAttribute("todoService", todoService);という処理は、AppContextListener.javaの
         // contextInitializedメソッドで行われている。
         // つまり、TodoServletのinit()メソッドが実行される時点までに、AppContextListenerのcontextInitializedメソッドが実行されているので、
-        // todoDaoはすでにServletContextに保存されている。
+        // todoServiceはすでにServletContextに保存されている。
         // 典型的な流れは以下のようになる。
         // TomcatがWebアプリを起動
         //         ↓
@@ -47,27 +46,27 @@ public final class TodoServlet
         //         ↓
         // contextInitialized() 実行
         //         ↓
-        // TodoDaoを生成
+        // TodoRepositoryとTodoServiceを生成
         //         ↓
         // ServletContext.setAttribute(
-        //     "todoDao", todoDao
+        //     "todoService", todoService
         // )
         //         ↓
         // TodoServlet生成・初期化
         //         ↓
         // TodoServlet.init() 実行
         //         ↓
-        // getAttribute("todoDao")
+        // getAttribute("todoService")
         //         ↓
-        // this.todoDao にセット
+        // this.todoService にセット
 
-        if (!(value instanceof TodoDao)) {
+        if (!(value instanceof TodoService)) {
                 throw new ServletException(
-                        "TodoDao is not initialized"
+                        "TodoService is not initialized"
                 );
         }
 
-        this.todoDao = (TodoDao) value;
+        this.todoService = (TodoService) value;
         }
 
     @Override
@@ -115,7 +114,13 @@ public final class TodoServlet
                     e.getMessage()
             );
 
-        } catch (SQLException e) {
+        } catch (TodoNotFoundException e) {
+
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+
+        } catch (RepositoryException e) {
 
             handleDatabaseError(e);
 
@@ -173,7 +178,13 @@ public final class TodoServlet
                     e.getMessage()
             );
 
-        } catch (SQLException e) {
+        } catch (TodoNotFoundException e) {
+
+            response.sendError(
+                    HttpServletResponse.SC_NOT_FOUND
+            );
+
+        } catch (RepositoryException e) {
 
             handleDatabaseError(e);
 
@@ -187,13 +198,12 @@ public final class TodoServlet
     private void showList(
             HttpServletRequest request,
             HttpServletResponse response)
-            throws SQLException,
-                   ServletException,
+            throws ServletException,
                    IOException {
 
         request.setAttribute(
                 "todos",
-                todoDao.findAll()
+                todoService.findAll()
         );
 
         request
@@ -235,23 +245,12 @@ public final class TodoServlet
     private void showEditForm(
             HttpServletRequest request,
             HttpServletResponse response)
-            throws SQLException,
-                   ServletException,
+            throws ServletException,
                    IOException {
 
         long id = parseId(request);
 
-        Optional<Todo> todo =
-                todoDao.findById(id);
-
-        if (todo.isEmpty()) {
-
-            response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND
-            );
-
-            return;
-        }
+        Todo todo = todoService.findById(id);
 
         request.setAttribute(
                 "mode",
@@ -260,7 +259,7 @@ public final class TodoServlet
 
         request.setAttribute(
                 "todo",
-                todo.get()
+                todo
         );
 
         request
@@ -276,8 +275,7 @@ public final class TodoServlet
     private void create(
             HttpServletRequest request,
             HttpServletResponse response)
-            throws SQLException,
-                   ServletException,
+            throws ServletException,
                    IOException {
 
         Todo todo =
@@ -286,23 +284,13 @@ public final class TodoServlet
                         0L
                 );
 
-        Map<String, String> errors =
-                validate(todo);
-
-        if (!errors.isEmpty()) {
-
+        try {
+            todoService.create(todo);
+        } catch (ValidationException e) {
             renderFormWithErrors(
-                    request,
-                    response,
-                    todo,
-                    errors,
-                    "create"
-            );
-
+                    request, response, todo, e.getErrors(), "create");
             return;
         }
-
-        todoDao.create(todo);
 
         redirectToList(
                 request,
@@ -313,23 +301,10 @@ public final class TodoServlet
     private void update(
             HttpServletRequest request,
             HttpServletResponse response)
-            throws SQLException,
-                   ServletException,
+            throws ServletException,
                    IOException {
 
         long id = parseId(request);
-
-        Optional<Todo> existing =
-                todoDao.findById(id);
-
-        if (existing.isEmpty()) {
-
-            response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND
-            );
-
-            return;
-        }
 
         Todo todo =
                 readTodoFromRequest(
@@ -337,39 +312,11 @@ public final class TodoServlet
                         id
                 );
 
-        todo.setCreatedAt(
-                existing.get().getCreatedAt()
-        );
-
-        todo.setUpdatedAt(
-                existing.get().getUpdatedAt()
-        );
-
-        Map<String, String> errors =
-                validate(todo);
-
-        if (!errors.isEmpty()) {
-
+        try {
+            todoService.update(id, todo);
+        } catch (ValidationException e) {
             renderFormWithErrors(
-                    request,
-                    response,
-                    todo,
-                    errors,
-                    "edit"
-            );
-
-            return;
-        }
-
-        boolean updated =
-                todoDao.update(todo);
-
-        if (!updated) {
-
-            response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND
-            );
-
+                    request, response, todo, e.getErrors(), "edit");
             return;
         }
 
@@ -382,22 +329,11 @@ public final class TodoServlet
     private void delete(
             HttpServletRequest request,
             HttpServletResponse response)
-            throws SQLException,
-                   IOException {
+            throws IOException {
 
         long id = parseId(request);
 
-        boolean deleted =
-                todoDao.delete(id);
-
-        if (!deleted) {
-
-            response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND
-            );
-
-            return;
-        }
+        todoService.delete(id);
 
         redirectToList(
                 request,
@@ -440,42 +376,6 @@ public final class TodoServlet
                 null,
                 null
         );
-    }
-
-    private Map<String, String> validate(
-            Todo todo) {
-
-        Map<String, String> errors =
-                new LinkedHashMap<>();
-
-        if (todo.getTitle() == null
-                || todo.getTitle().isBlank()) {
-
-            errors.put(
-                    "title",
-                    "タイトルは必須です。"
-            );
-
-        } else if (
-                todo.getTitle().length() > 200) {
-
-            errors.put(
-                    "title",
-                    "タイトルは200文字以内です。"
-            );
-        }
-
-        if (todo.getDescription() != null
-                && todo.getDescription().length()
-                   > 2000) {
-
-            errors.put(
-                    "description",
-                    "説明は2000文字以内です。"
-            );
-        }
-
-        return errors;
     }
 
     private void renderFormWithErrors(
@@ -556,7 +456,7 @@ public final class TodoServlet
     }
 
     private void handleDatabaseError(
-            SQLException e) {
+            RepositoryException e) {
 
         getServletContext().log(
                 "Database operation failed",

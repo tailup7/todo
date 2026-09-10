@@ -1,7 +1,10 @@
-package com.example.todo.web;
+package com.example.todo.config;
 
-import com.example.todo.dao.JdbcTodoDao;
-import com.example.todo.db.Database;
+import com.example.todo.database.Database;
+import com.example.todo.repository.JdbcTodoRepository;
+import com.example.todo.repository.TodoRepository;
+import com.example.todo.service.TodoService;
+import com.example.todo.service.TodoServiceImpl;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
@@ -18,14 +21,16 @@ public final class AppContextListener
                 event.getServletContext();
 
         try {
-            JdbcTodoDao todoDao =
-                    new JdbcTodoDao(
-                            Database.create(context)
-                    );
+            TodoRepository todoRepository =
+                    new JdbcTodoRepository(
+                            Database.create(context));
+
+            TodoService todoService =
+                    new TodoServiceImpl(todoRepository);
 
             context.setAttribute(
-                    "todoDao",
-                    todoDao
+                    "todoService",
+                    todoService
             );
 
             context.log(

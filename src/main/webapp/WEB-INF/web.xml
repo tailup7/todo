@@ -31,7 +31,7 @@
     <listener>
 
         <listener-class>
-            com.example.todo.web.AppContextListener
+            com.example.todo.config.AppContextListener
         </listener-class>
 
     </listener>
@@ -67,7 +67,7 @@
         </servlet-name>
 
         <servlet-class>
-            com.example.todo.web.TodoServlet
+            com.example.todo.controller.TodoServlet
         </servlet-class>
 
         <load-on-startup>
