@@ -188,44 +188,55 @@ todo/
 # ビルド・手動デプロイ
 
 1. ローカルビルド
-  ``` powershell
-  mvn clean package
-  ```
+    ``` powershell
+    mvn clean package
+    ```
 
   `target/`に`todo.war`が生成される。
 
 2. 手動デプロイ
-  Tomcatは停止しておく
-  ``` powershell
-  & "$env:CATALINA_HOME\bin\shutdown.bat"
-  ```
 
-  以下のコマンドを実行する
-  `` powershell
-  Remove-Item `
-    "$env:CATALINA_BASE\webapps\todo.war" `
-    -Force `
-    -ErrorAction SilentlyContinue
+    Tomcatは停止しておく
 
-  Remove-Item `
-    "$env:CATALINA_BASE\webapps\todo" `
-    -Recurse `
-    -Force `
-    -ErrorAction SilentlyContinue
+    ``` powershell
+    & "$env:CATALINA_HOME\bin\shutdown.bat"
+    ```
 
-  Copy-Item `
-    "target\todo.war" `
-    "$env:CATALINA_BASE\webapps\todo.war"
-  ```
-  やっていることは、生成された `target\todo.war`を `$CATALINA_BASE\webapps\`に配置しているだけ。コマンド実行ではなくコピペでも可。
+    以下のコマンドを実行する
+
+    ``` powershell
+    Remove-Item `
+      "$env:CATALINA_BASE\webapps\todo.war" `
+      -Force `
+      -ErrorAction SilentlyContinue
+
+    Remove-Item `
+      "$env:CATALINA_BASE\webapps\todo" `
+      -Recurse `
+      -Force `
+      -ErrorAction SilentlyContinue
+
+    Copy-Item `
+      "target\todo.war" `
+      "$env:CATALINA_BASE\webapps\todo.war"
+    ```
+
+    やっていることは、生成された `target\todo.war`を `$CATALINA_BASE\webapps\`に配置しているだけ。コマンド実行ではなくコピペでも可。
+
 3. Tomcatを起動する
-  以下のコマンドを実行
-  ``` powershell
-  & "$env:CATALINA_HOME\bin\startup.bat"
-  ```
+
+    以下のコマンドを実行
+
+    ``` powershell
+    & "$env:CATALINA_HOME\bin\startup.bat"
+    ```
+
 4. 動作確認
-  例えばTomcatのポート番号が8080なら、
-  ```
-  http://localhost:8080/todo/todos
-  ```
-  にブラウザからアクセスする。
+
+   例えばTomcatのポート番号が8080なら、
+
+   ``` 
+   http://localhost:8080/todo/todos
+   ```
+
+   にブラウザからアクセスする。
