@@ -60,6 +60,12 @@
 
     </filter-mapping>
 
+<!-- この部分を、TodoServlet.java側の
+@WebServlet(
+    urlPatterns = "/todos/*",
+    loadOnStartup = 1
+)
+に置き換える。
     <servlet>
 
         <servlet-name>
@@ -87,7 +93,7 @@
         </url-pattern>
 
     </servlet-mapping>
-
+-->
     <resource-ref>
 
         <description>

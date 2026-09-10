@@ -8,6 +8,7 @@ import com.example.todo.service.TodoNotFoundException;
 import com.example.todo.service.TodoService;
 import com.example.todo.service.ValidationException;
 
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +18,15 @@ import java.io.IOException;
 
 import java.util.Map;
 
+// @WebServletアノテーションは、TodoServletとURL(/todos/*)をマッピング
+// /todos ではなく /todos/* なのは、/todos配下の複数のURLをこのTodoServletに処理させるため。
+// loadOnStartup = 1 は、TomcatなどのWebサーバが起動したときに、このServletをあらかじめ生成・初期化しておく、という意味
+// なので、loadOnStartup = 1　は必須ではない。無くても動作するが、
+// Tomcat起動時にTodoServletを生成・初期化しておくことで、初回アクセス時のレスポンスが早くなる。
+@WebServlet(
+    urlPatterns = "/todos/*",
+    loadOnStartup = 1
+)
 // extendsは、継承を意味する。HttpServletを継承している。
 public final class TodoServlet
         extends HttpServlet {
