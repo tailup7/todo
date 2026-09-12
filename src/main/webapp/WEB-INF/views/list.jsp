@@ -78,15 +78,7 @@
                     </td>
 
                     <td>
-                        <c:choose>
-                            <c:when
-                                test="${todo.completed}">
-                                完了
-                            </c:when>
-                            <c:otherwise>
-                                未完了
-                            </c:otherwise>
-                        </c:choose>
+                        <c:out value="${todo.status.label}"/>
                     </td>
 
                     <td>

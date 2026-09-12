@@ -8,7 +8,7 @@ todo/
   ├─ db/                                                  # DB作成・スキーマ・初期データ
   │     ├─ 00_database.psql
   │     ├─ 01_schema.sql
-  │     └─ 02_seed.sql
+  │     └─ 02_data.sql
   ├─ src/
   │     ├─ main/
   │     │     ├─ java/
@@ -51,7 +51,31 @@ todo/
 
 # 準備
 
-## DB接続方法
+## 環境構築
+省略
+
+## postgreSQLのロール・DB作成・スキーマ作成・初期データ投入
+この手順は1度だけ行う。
+
+1. PostgreSQLのロールとDBの作成
+
+    PostgreSQLの管理ユーザで、プロジェクト直下から以下を実行
+
+    ``` powershell
+    psql -U postgres -d postgres -f db\00_database.psql
+    ```
+    `todo_app` ロール用のパスワード設定を求められるので、入力する。`todo` というデータベースが作られる。
+
+2. テーブルと初期データ作成
+
+    以下のコマンドを実行 (`todo_app` ロールのパスワード入力を求められるので、先ほど設定したパスワードを入力)
+
+    ``` powershell
+    psql -U todo_app -d todo -f db\01_schema.sql
+    psql -U todo_app -d todo -f db\02_data.sql
+    ```
+
+## DB接続
 このアプリケーションでは、PostgreSQLへの接続方法として`direct`と`jndi`の2種類を利用できる。
 
 - 方法1: direct
@@ -188,11 +212,13 @@ todo/
 # ビルド・手動デプロイ
 
 1. ローカルビルド
+
+    `pom.xml`のあるディレクトリで以下のコマンドを実行
     ``` powershell
     mvn clean package
     ```
 
-  `target/`に`todo.war`が生成される。
+    `target/`に`todo.war`が生成される。
 
 2. 手動デプロイ
 

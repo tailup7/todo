@@ -1,0 +1,164 @@
+<%@ page
+    contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"
+%>
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <title>ログイン | Todo</title>
+
+    <style>
+        :root {
+            color: #1f2937;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                    "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            align-items: center;
+            background: #f3f6fb;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border: 1px solid #dbe3ef;
+            border-radius: 12px;
+            box-shadow: 0 12px 32px rgba(31, 41, 55, 0.10);
+            max-width: 400px;
+            padding: 40px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin: 0;
+            text-align: center;
+        }
+
+        .lead {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin: 12px 0 32px;
+            text-align: center;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        input {
+            border: 1px solid #b9c6d8;
+            border-radius: 6px;
+            font: inherit;
+            padding: 11px 12px;
+            width: 100%;
+        }
+
+        input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+            outline: none;
+        }
+
+        .actions {
+            display: grid;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 6px;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+            padding: 12px;
+        }
+
+        .login-button {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .login-button:hover {
+            background: #1d4ed8;
+        }
+
+        .register-button {
+            background: #ffffff;
+            border: 1px solid #2563eb;
+            color: #1d4ed8;
+        }
+
+        .register-button:hover {
+            background: #eff6ff;
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="login-card">
+    <h1>ログイン</h1>
+    <p class="lead">Todo を続けるにはログインしてください。</p>
+
+    <%-- モック画面のため、送信先や認証処理はまだ設定しない。 --%>
+    <form>
+        <div class="field">
+            <label for="username">ユーザー名</label>
+            <input
+                id="username"
+                name="username"
+                type="text"
+                autocomplete="username"
+                required
+            >
+        </div>
+
+        <div class="field">
+            <label for="password">パスワード</label>
+            <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+            >
+        </div>
+
+        <div class="actions">
+            <button class="login-button" type="button">
+                ログイン
+            </button>
+            <button class="register-button" type="button">
+                新規登録
+            </button>
+        </div>
+    </form>
+</main>
+
+</body>
+</html>

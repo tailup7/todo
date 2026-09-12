@@ -4,10 +4,24 @@ import java.time.Instant;
 
 public class Todo {
 
+    public enum Status {
+        NOT_STARTED("未開始"),
+        IN_PROGRESS("実行中"),
+        COMPLETED("完了");
+        private final String label;
+        Status(String label) {
+            this.label = label;
+        }
+        public String getLabel() {
+            return label;
+        }
+    }
+
     private long id;
+    private long listId;
     private String title;
     private String description;
-    private boolean completed;
+    private Status status = Status.NOT_STARTED;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -15,17 +29,19 @@ public class Todo {
     }
 
     public Todo(
-            long id,
-            String title,
-            String description,
-            boolean completed,
-            Instant createdAt,
-            Instant updatedAt) {
+        long id,
+        long listId,
+        String title,
+        String description,
+        Status status,
+        Instant createdAt,
+        Instant updatedAt) {
 
         this.id = id;
+        this.listId = listId;
         this.title = title;
         this.description = description;
-        this.completed = completed;
+        this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -36,6 +52,14 @@ public class Todo {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public long getListId() {
+        return listId;
+    }
+
+    public void setListId(long listId) {
+        this.listId = listId;
     }
 
     public String getTitle() {
@@ -54,12 +78,12 @@ public class Todo {
         this.description = description;
     }
 
-    public boolean isCompleted() {
-        return completed;
+    public Status getStatus() {
+        return status;
     }
 
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
     public Instant getCreatedAt() {

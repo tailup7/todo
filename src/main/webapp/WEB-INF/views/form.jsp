@@ -125,30 +125,24 @@
     </div>
 
     <div>
-
-        <label>
-            <c:choose>
-
-                <c:when test="${todo.completed}">
-                    <input
-                        type="checkbox"
-                        name="completed"
-                        checked
-                    >
-                </c:when>
-
-                <c:otherwise>
-                    <input
-                        type="checkbox"
-                        name="completed"
-                    >
-                </c:otherwise>
-
-            </c:choose>
-
-            完了
-        </label>
-
+        <label for="status">状態</label>
+    
+        <select id="status" name="status" required>
+            <c:forEach items="${statuses}" var="status">
+                <option
+                    value="${status}"
+                    <c:if test="${status eq todo.status}">
+                        selected
+                    </c:if>
+                >
+                    <c:out value="${status.label}"/>
+                </option>
+            </c:forEach>
+        </select>
+    
+        <c:if test="${not empty errors.status}">
+            <p><c:out value="${errors.status}"/></p>
+        </c:if>
     </div>
 
     <button type="submit">

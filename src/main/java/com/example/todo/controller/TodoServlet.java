@@ -20,30 +20,18 @@ import java.util.Map;
 
 // @WebServletアノテーションは、TodoServletとURL(/todos/*)をマッピング
 // /todos ではなく /todos/* なのは、/todos配下の複数のURLをこのTodoServletに処理させるため。
-// loadOnStartup = 1 は、TomcatなどのWebサーバが起動したときに、このServletをあらかじめ生成・初期化しておく、という意味
-// なので、loadOnStartup = 1　は必須ではない。無くても動作するが、
-// Tomcat起動時にTodoServletを生成・初期化しておくことで、初回アクセス時のレスポンスが早くなる。
-@WebServlet(
-    urlPatterns = "/todos/*",
-    loadOnStartup = 1
-)
+@WebServlet(urlPatterns = "/todos/*")
 // extendsは、継承を意味する。HttpServletを継承している。
-public final class TodoServlet
-        extends HttpServlet {
+public final class TodoServlet extends HttpServlet {
         // メンバ変数todoServiceの宣言
         private TodoService todoService;
-
         // overrideは、親クラス(今回はHttpSevlet)のメソッドを子クラス側で定義しなおすこと。
         @Override
         // initメソッド : Tomcatによって生成されたServletを、利用可能な状態に初期化する。
-        public void init()
-                throws ServletException {
-
+        public void init() throws ServletException {
         // getServletContext()は、webアプリケーション全体で共有される`ServletContext`を取得するメソッド。
         // ServletContextには、アプリケーション全体で共有したい情報を`attribute`として保存できる。
-        Object value =
-                getServletContext()
-                        .getAttribute("todoService");
+                Object value = getServletContext().getAttribute("todoService");
         // 右辺でやっていることは、ServletContextに`todoService`という名前で保存されているオブジェクトを取得している
         // ちなみに、servletContext.setAttribute("todoService", todoService);という処理は、AppContextListener.javaの
         // contextInitializedメソッドで行われている。
@@ -70,77 +58,35 @@ public final class TodoServlet
         //         ↓
         // this.todoService にセット
 
-        if (!(value instanceof TodoService)) {
-                throw new ServletException(
-                        "TodoService is not initialized"
-                );
+                if (!(value instanceof TodoService)) {
+                        throw new ServletException("TodoService is not initialized");
+                }
+                this.todoService = (TodoService) value;
         }
 
-        this.todoService = (TodoService) value;
+        // GETメソッド。
+        @Override
+        protected void doGet(HttpServletRequest request, HttpServletResponse response)
+                throws ServletException, IOException {
+                try {
+                String path = normalizePath(request.getPathInfo());
+                switch (path) {
+                        case "/" -> showList(request, response);
+                        case "/new" -> showCreateForm(request, response);
+                        case "/edit" -> showEditForm(request, response);
+                        default -> response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                        }
+                } catch (IllegalArgumentException e) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                } catch (TodoNotFoundException e) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                } catch (RepositoryException e) {
+                handleDatabaseError(e);
+                throw new ServletException("Database operation failed", e);
+                }
         }
 
-    @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException, IOException {
-
-        try {
-            String path =
-                    normalizePath(
-                            request.getPathInfo()
-                    );
-
-            switch (path) {
-
-                case "/" ->
-                        showList(
-                                request,
-                                response
-                        );
-
-                case "/new" ->
-                        showCreateForm(
-                                request,
-                                response
-                        );
-
-                case "/edit" ->
-                        showEditForm(
-                                request,
-                                response
-                        );
-
-                default ->
-                        response.sendError(
-                                HttpServletResponse.SC_NOT_FOUND
-                        );
-            }
-
-        } catch (IllegalArgumentException e) {
-
-            response.sendError(
-                    HttpServletResponse.SC_BAD_REQUEST,
-                    e.getMessage()
-            );
-
-        } catch (TodoNotFoundException e) {
-
-            response.sendError(
-                    HttpServletResponse.SC_NOT_FOUND
-            );
-
-        } catch (RepositoryException e) {
-
-            handleDatabaseError(e);
-
-            throw new ServletException(
-                    "Database operation failed",
-                    e
-            );
-        }
-    }
-
+        // POSTメソッド
     @Override
     protected void doPost(
             HttpServletRequest request,
@@ -205,26 +151,12 @@ public final class TodoServlet
         }
     }
 
-    private void showList(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException,
-                   IOException {
-
-        request.setAttribute(
-                "todos",
-                todoService.findAll()
-        );
-
-        request
-                .getRequestDispatcher(
-                        "/WEB-INF/views/list.jsp"
-                )
-                .forward(
-                        request,
-                        response
-                );
-    }
+        // "/todos"にアクセスしたときに、todoの一覧を表示するためのメソッド
+        private void showList(HttpServletRequest request,HttpServletResponse response)
+                throws ServletException, IOException {
+                request.setAttribute("todos", todoService.findAll());
+                request.getRequestDispatcher("/WEB-INF/views/list.jsp").forward(request, response);
+        }
 
     private void showCreateForm(
             HttpServletRequest request,
@@ -351,42 +283,63 @@ public final class TodoServlet
         );
     }
 
-    private Todo readTodoFromRequest(
-            HttpServletRequest request,
-            long id) {
+        // エラー解消のために、追加したメソッド。なので後で削除するか消す。
+        private long parseListId(HttpServletRequest request) {
+            String value = request.getParameter("listId");
 
-        String title =
-                trim(
-                        request.getParameter(
-                                "title"
-                        )
-                );
+            if (value == null) {
+                throw new IllegalArgumentException("listId is required");
+            }
 
-        String description =
-                trim(
-                        request.getParameter(
-                                "description"
-                        )
-                );
+            try {
+                long listId = Long.parseLong(value);
 
-        if (description.isEmpty()) {
-            description = null;
+                if (listId <= 0) {
+                    throw new IllegalArgumentException(
+                            "listId must be positive"
+                    );
+                }
+
+                return listId;
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("invalid listId", e);
+            }
         }
 
-        boolean completed =
-                request.getParameter(
-                        "completed"
-                ) != null;
+        private Todo.Status parseStatus(HttpServletRequest request) {
+                String value = request.getParameter("status");
+                if (value == null) {
+                        throw new IllegalArgumentException("status is required");
+                }
+                try {
+                        return Todo.Status.valueOf(value);
+                } catch (IllegalArgumentException e) {
+                        throw new IllegalArgumentException("invalid status",e);
+                }
+        }
 
-        return new Todo(
-                id,
-                title,
-                description,
-                completed,
-                null,
-                null
-        );
-    }
+        // todo画面の「新規」ボタンから、todoが作成されてHTTPリクエストを受け取ったとき、
+        // java側でもtodoを作成するために、HTTPリクエストのパラメータからtodoの情報を取得する。
+        private Todo readTodoFromRequest(HttpServletRequest request, long id) {
+
+                long listId = parseListId(request);
+                String title = trim(request.getParameter("title"));
+                String description =trim(request.getParameter("description"));
+                if (description.isEmpty()) {
+                        description = null;
+                }
+                Todo.Status status = parseStatus(request);
+
+                return new Todo(
+                        id,
+                        listId,
+                        title,
+                        description,
+                        status,
+                        null,
+                        null
+                );
+        }
 
     private void renderFormWithErrors(
             HttpServletRequest request,
@@ -422,37 +375,26 @@ public final class TodoServlet
                 );
     }
 
-    private long parseId(
-            HttpServletRequest request) {
-
-        String value =
-                request.getParameter("id");
-
-        if (value == null) {
-            throw new IllegalArgumentException(
-                    "id is required"
-            );
+        private long parseId(HttpServletRequest request) {
+                String value = request.getParameter("id");
+                if (value == null) {
+                        throw new IllegalArgumentException("id is required");
+                }
+                try {
+                        long id = Long.parseLong(value);
+                        if (id <= 0) {
+                                throw new IllegalArgumentException(
+                                        "id must be positive"
+                                );
+                        }
+                        return id;
+                } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException(
+                                "invalid id",
+                                e
+                        );
+                }
         }
-
-        try {
-            long id = Long.parseLong(value);
-
-            if (id <= 0) {
-                throw new IllegalArgumentException(
-                        "id must be positive"
-                );
-            }
-
-            return id;
-
-        } catch (NumberFormatException e) {
-
-            throw new IllegalArgumentException(
-                    "invalid id",
-                    e
-            );
-        }
-    }
 
     private void redirectToList(
             HttpServletRequest request,

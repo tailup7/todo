@@ -19,12 +19,13 @@ public final class JdbcTodoRepository implements TodoRepository {
     private static final String SELECT_COLUMNS = """
             SELECT
                 id,
+                list_id,
                 title,
                 description,
-                completed,
+                status,
                 created_at,
                 updated_at
-            FROM todo
+            FROM todos
             """;
 
     private final ConnectionProvider connectionProvider;
@@ -97,25 +98,25 @@ public final class JdbcTodoRepository implements TodoRepository {
     public void create(Todo todo) {
 
         String sql = """
-                INSERT INTO todo (
+                INSERT INTO todos (
+                    list_id,
                     title,
                     description,
-                    completed
+                    status
                 )
-                VALUES (?, ?, ?)
+                VALUES (?, ?, ?, ?)
                 """;
 
         try (
                 Connection connection =
                         connectionProvider.getConnection();
-
                 PreparedStatement statement =
                         connection.prepareStatement(sql)
         ) {
-
-            statement.setString(1, todo.getTitle());
-            statement.setString(2, todo.getDescription());
-            statement.setBoolean(3, todo.isCompleted());
+            statement.setLong(1, todo.getListId());
+            statement.setString(2, todo.getTitle());
+            statement.setString(3, todo.getDescription());
+            statement.setString(4, todo.getStatus().name());
 
             int updatedRows = statement.executeUpdate();
 
@@ -134,10 +135,10 @@ public final class JdbcTodoRepository implements TodoRepository {
     public boolean update(Todo todo) {
 
         String sql = """
-                UPDATE todo
+                UPDATE todos
                    SET title = ?,
                        description = ?,
-                       completed = ?,
+                       status = ?,
                        updated_at = CURRENT_TIMESTAMP
                  WHERE id = ?
                 """;
@@ -152,7 +153,7 @@ public final class JdbcTodoRepository implements TodoRepository {
 
             statement.setString(1, todo.getTitle());
             statement.setString(2, todo.getDescription());
-            statement.setBoolean(3, todo.isCompleted());
+            statement.setString(3, todo.getStatus().name());
             statement.setLong(4, todo.getId());
 
             return statement.executeUpdate() == 1;
@@ -166,7 +167,7 @@ public final class JdbcTodoRepository implements TodoRepository {
     public boolean delete(long id) {
 
         String sql = """
-                DELETE FROM todo
+                DELETE FROM todos
                  WHERE id = ?
                 """;
 
@@ -201,9 +202,10 @@ public final class JdbcTodoRepository implements TodoRepository {
 
         return new Todo(
                 resultSet.getLong("id"),
+                resultSet.getLong("list_id"),
                 resultSet.getString("title"),
                 resultSet.getString("description"),
-                resultSet.getBoolean("completed"),
+                Todo.Status.valueOf(resultSet.getString("status")),
                 createdAt,
                 updatedAt
         );

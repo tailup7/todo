@@ -70,6 +70,10 @@ public final class TodoServiceImpl
             errors.put("description", "説明は2000文字以内です。");
         }
 
+        if (todo.getStatus() == null) {
+        errors.put("status", "状態を選択してください。");
+        }
+
         if (!errors.isEmpty()) {
             throw new ValidationException(errors);
         }

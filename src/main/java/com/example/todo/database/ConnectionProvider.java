@@ -1,3 +1,5 @@
+// DB接続を担う。DBのテーブル変更があっても、このファイルは変更不要。 
+
 package com.example.todo.database;
 
 import java.sql.Connection;
