@@ -79,7 +79,7 @@ todo/
 このアプリケーションでは、PostgreSQLへの接続方法として`direct`と`jndi`の2種類を利用できる。
 
 - 方法1: direct
-    - 1. DriverManagerを使用してPostgreSQLへ直接接続する
+    1. DriverManagerを使用してPostgreSQLへ直接接続する
         - PowerShellで以下の環境変数を設定する
           ```
             $env:TODO_DB_MODE = "direct"
@@ -107,33 +107,35 @@ todo/
                   PostgreSQL
           ```
 
-        - 2: PostgreSQL JDBC DriverをTomcatのlibへ配置
-          JNDI DataSourceはTomcat側で生成されるため、
-          TomcatがPostgreSQL JDBC Driverを利用できるようにする。
+    2. PostgreSQL JDBC 
+        
+        JNDI DataSourceはTomcat側で生成されるため、TomcatがPostgreSQL JDBC Driverを利用できるようにする。
 
-          (powershellの場合)`pom.xml`がある階層で、以下のコマンドを実行し、MavenにPostgreSQL JDBC Driverを取得させる。
+        (powershellの場合)`pom.xml`がある階層で、以下のコマンドを実行し、MavenにPostgreSQL JDBC Driverを取得させる。
 
-          ```powershell
-          mvn dependency:resolve 
-          ```
-          これにより、ローカルのMavenリポジトリ、すなわち
-          ```
-          C:\Users\<ユーザー名>\.m2\repository\
+        ```powershell
+        mvn dependency:resolve 
+        ```
+
+        これにより、ローカルのMavenリポジトリ、すなわち
+        ```
+        C:\Users\<ユーザー名>\.m2\repository\
           └── org\
-              └── postgresql\
-                  └── postgresql\
-                      └── 42.7.13\
-                          └── postgresql-42.7.13.jar
-          ```
-          のような場所に、PostgreSQL JDBC Driver が入る。
+            └── postgresql\
+                └── postgresql\
+                    └── 42.7.13\
+                        └── postgresql-42.7.13.jar
+        ```
+        のような場所に、PostgreSQL JDBC Driver が入る。
 
-          <br>
-          その後、取得したJARを Tomcatの `lib` ディレクトリへコピーする。
-          ``` powershell
-          Copy-Item `
-            "$HOME\.m2\repository\org\postgresql\postgresql\42.7.13\postgresql-42.7.13.jar" `
-            "$env:CATALINA_HOME\lib\"
-          ```
+        <br>
+        その後、取得したJARを Tomcatの `lib` ディレクトリへコピーする。
+
+        ``` powershell
+        Copy-Item `
+          "$HOME\.m2\repository\org\postgresql\postgresql\42.7.13\postgresql-42.7.13.jar" `
+          "$env:CATALINA_HOME\lib\"
+        ```
 
 - 方法2: jndi
   - 最初にTomcat環境を構築する際に、一度だけ配置する(JavaソースやJSPを更新してWARを再デプロイしても、DB接続設定を変更しない限り、todo.xmlの修正・再配置は不要)。

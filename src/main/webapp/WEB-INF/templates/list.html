@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <title>リスト | Todo</title>
+
+    <style>
+        :root {
+            color: #1f2937;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                    "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f3f6fb;
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .page {
+            margin: 0 auto;
+            max-width: 800px;
+        }
+
+        .page-header {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin: 0;
+        }
+
+        .logout-button {
+            background: #ffffff;
+            border: 1px solid #94a3b8;
+            border-radius: 6px;
+            color: #334155;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+            padding: 10px 16px;
+        }
+
+        .logout-button:hover {
+            background: #f8fafc;
+        }
+
+        .lead {
+            color: #64748b;
+            margin: 0 0 16px;
+        }
+
+        .list-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .list-card {
+            background: #ffffff;
+            border: 1px solid #dbe3ef;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(31, 41, 55, 0.07);
+            color: inherit;
+            display: block;
+            padding: 24px;
+            text-decoration: none;
+            transition: box-shadow 0.15s ease, transform 0.15s ease;
+        }
+
+        .list-card:hover {
+            box-shadow: 0 8px 20px rgba(31, 41, 55, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .list-card h2 {
+            font-size: 1.15rem;
+            margin: 0;
+        }
+
+        .list-card p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin: 8px 0 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="page">
+    <header class="page-header">
+        <h1>リスト</h1>
+
+        <!-- ログアウト処理は未実装のため、画面上のボタンのみ表示する。 -->
+        <button class="logout-button" type="button">
+            ログアウト
+        </button>
+    </header>
+
+    <p class="lead">開くリストを選択してください。</p>
+
+    <section class="list-grid" aria-label="Todo リスト">
+        <!-- 現時点ではモックのカード。リスト取得機能の実装後に th:each へ置き換える。 -->
+        <a class="list-card" href="todos">
+            <h2>todos</h2>
+            <p>Todo を確認・編集する</p>
+        </a>
+    </section>
+</main>
+
+</body>
+</html>

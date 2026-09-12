@@ -1,10 +1,5 @@
-<%@ page
-    contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"
-%>
-
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
@@ -124,9 +119,19 @@
 <main class="login-card">
     <h1>ログイン</h1>
     <p class="lead">Todo を続けるにはログインしてください。</p>
+    <p
+    th:if="${error}"
+    th:text="${error}"
+    role="alert">ユーザー名またはパスワードが違います。
+    </p>
 
-    <%-- モック画面のため、送信先や認証処理はまだ設定しない。 --%>
-    <form>
+    <form method="post">
+        <input
+            type="hidden"
+            name="_csrf"
+            th:value="${csrfToken}"
+        >
+    
         <div class="field">
             <label for="username">ユーザー名</label>
             <input
@@ -134,10 +139,11 @@
                 name="username"
                 type="text"
                 autocomplete="username"
+                th:value="${username}"
                 required
             >
         </div>
-
+    
         <div class="field">
             <label for="password">パスワード</label>
             <input
@@ -148,11 +154,12 @@
                 required
             >
         </div>
-
+    
         <div class="actions">
-            <button class="login-button" type="button">
+            <button class="login-button" type="submit">
                 ログイン
             </button>
+        
             <button class="register-button" type="button">
                 新規登録
             </button>

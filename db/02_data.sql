@@ -4,15 +4,15 @@ BEGIN;
 
 -- 開発用ユーザー。全ユーザーのパスワードは "password"。
 -- 値は BCrypt ハッシュであり、本番用の初期データとしては使用しないこと。
-INSERT INTO user_account (name, password)
+INSERT INTO user_account (name, password_hash)
 VALUES
     (
         'tanaka',
-        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
+        '$2a$12$5dHORiEgeRJCizz.W5adQuCCuV54aF95imAS.KecLE9Bv1J7fdXz6'
     ),
     (
         'suzuki',
-        '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
+        '$2a$12$5dHORiEgeRJCizz.W5adQuCCuV54aF95imAS.KecLE9Bv1J7fdXz6'
     );
 
 -- IDを決め打ちせず、ユーザー名から user_id を取得してリストを作成する。

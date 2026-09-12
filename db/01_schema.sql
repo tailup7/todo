@@ -5,7 +5,7 @@ CREATE TABLE user_account (
 
     name VARCHAR(100) NOT NULL UNIQUE CHECK (btrim(name) <> ''),
 
-    password VARCHAR(255) NOT NULL
+    password_hash VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE todos_list (

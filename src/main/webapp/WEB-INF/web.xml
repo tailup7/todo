@@ -49,7 +49,6 @@
     </filter>
 
     <filter-mapping>
-
         <filter-name>
             CsrfFilter
         </filter-name>
@@ -57,7 +56,16 @@
         <url-pattern>
             /todos/*
         </url-pattern>
+    </filter-mapping>
 
+    <filter-mapping>
+        <filter-name>
+            CsrfFilter
+        </filter-name>
+
+        <url-pattern>
+            /login
+        </url-pattern>
     </filter-mapping>
 
 <!-- この部分を、TodoServlet.java側の
