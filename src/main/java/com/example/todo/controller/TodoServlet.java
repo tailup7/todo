@@ -196,131 +196,101 @@ public final class TodoServlet extends HttpServlet {
                 templateEngine.process("todos", context, response.getWriter());
         }
         
+        // Todoの「新規作成画面」を表示するためのメソッド
+        private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
+                throws ServletException, IOException {
 
-    private void showCreateForm(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException,
-                   IOException {
+                long userId = getAuthenticatedUserId(request);
+                long listId = parseListId(request);
 
-        request.setAttribute(
-                "mode",
-                "create"
-        );
-
-        request.setAttribute(
-                "todo",
-                new Todo()
-        );
-
-        request
-                .getRequestDispatcher(
-                        "/WEB-INF/views/form.jsp"
-                )
-                .forward(
-                        request,
-                        response
-                );
-    }
-
-    private void showEditForm(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException,
-                   IOException {
-
-        long id = parseId(request);
-
-        Todo todo = todoService.findById(id);
-
-        request.setAttribute(
-                "mode",
-                "edit"
-        );
-
-        request.setAttribute(
-                "todo",
-                todo
-        );
-
-        request
-                .getRequestDispatcher(
-                        "/WEB-INF/views/form.jsp"
-                )
-                .forward(
-                        request,
-                        response
-                );
-    }
-
-    private void create(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException,
-                   IOException {
-
-        Todo todo =
-                readTodoFromRequest(
-                        request,
-                        0L
-                );
-
-        try {
-            todoService.create(todo);
-        } catch (ValidationException e) {
-            renderFormWithErrors(
-                    request, response, todo, e.getErrors(), "create");
-            return;
+                if (!todoListRepository.existsByIdAndUserId(listId, userId)) {
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                        return;
+                }
+                Todo todo = new Todo();
+                todo.setListId(listId);
+                renderForm(request, response, todo, null, "create");
         }
 
-        redirectToList(
-                request,
-                response
-        );
-    }
+        // Todoの「編集画面」を表示するためのメソッド
+        private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+                throws ServletException, IOException {
 
-    private void update(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws ServletException,
-                   IOException {
+                long userId = getAuthenticatedUserId(request);
+                long id = parseId(request);
+                Todo todo = todoService.findById(id);
 
-        long id = parseId(request);
-
-        Todo todo =
-                readTodoFromRequest(
-                        request,
-                        id
-                );
-
-        try {
-            todoService.update(id, todo);
-        } catch (ValidationException e) {
-            renderFormWithErrors(
-                    request, response, todo, e.getErrors(), "edit");
-            return;
+                if (!todoListRepository.existsByIdAndUserId(todo.getListId(), userId)) {
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                        return;
+                }
+                renderForm(request, response, todo, null, "edit");
         }
 
-        redirectToList(
-                request,
-                response
-        );
-    }
+        // Todoの新規作成処理を行うためのメソッド
+        private void create(HttpServletRequest request, HttpServletResponse response)
+                throws ServletException, IOException {
 
-    private void delete(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
+                long userId = getAuthenticatedUserId(request);
+                long listId = parseListId(request);
 
-        long id = parseId(request);
+                if (!todoListRepository.existsByIdAndUserId(listId, userId)) {
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                        return;
+                }
 
-        todoService.delete(id);
+                Todo todo = readTodoFromRequest(request, 0L, listId);
 
-        redirectToList(
-                request,
-                response
-        );
-    }
+                try {
+                        todoService.create(todo);
+                } catch (ValidationException e) {
+                        renderFormWithErrors(
+                        request, response, todo, e.getErrors(), "create");
+                return;
+                }
+
+                redirectToList(request, response, listId);
+        }
+
+    // Todoの更新処理を行うためのメソッド
+        private void update(HttpServletRequest request, HttpServletResponse response)
+                throws ServletException, IOException {
+
+                long userId = getAuthenticatedUserId(request);
+                long id = parseId(request);
+                // リクエスト値ではなく、DB にある Todo を取得する
+                Todo existing = todoService.findById(id);
+                // DB 上の実際の listId を使って所有者確認する
+                if (!todoListRepository.existsByIdAndUserId(existing.getListId(), userId)) {
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                        return;
+                }
+                Todo todo = readTodoFromRequest(request, id, existing.getListId());
+
+                try {
+                        todoService.update(id, todo);
+                } catch (ValidationException e) {
+                        renderFormWithErrors(request, response, todo, e.getErrors(), "edit");
+                        return;
+                }
+
+                redirectToList(request, response, existing.getListId());
+        }
+
+        // Todoの削除処理を行うためのメソッド
+        private void delete(HttpServletRequest request, HttpServletResponse response)
+                throws ServletException, IOException {
+
+                long userId = getAuthenticatedUserId(request);
+                long id = parseId(request);
+                Todo existing = todoService.findById(id);
+                if (!todoListRepository.existsByIdAndUserId(existing.getListId(), userId)) {
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                        return;
+                }
+                todoService.delete(id);
+                redirectToList(request, response, existing.getListId());
+        }
 
         // エラー解消のために、追加したメソッド。なので後で削除するか消す。
         private long parseListId(HttpServletRequest request) {
@@ -359,9 +329,8 @@ public final class TodoServlet extends HttpServlet {
 
         // todo画面の「新規」ボタンから、todoが作成されてHTTPリクエストを受け取ったとき、
         // java側でもtodoを作成するために、HTTPリクエストのパラメータからtodoの情報を取得する。
-        private Todo readTodoFromRequest(HttpServletRequest request, long id) {
+        private Todo readTodoFromRequest(HttpServletRequest request, long id, long listId) {
 
-                long listId = parseListId(request);
                 String title = trim(request.getParameter("title"));
                 String description =trim(request.getParameter("description"));
                 if (description.isEmpty()) {
@@ -380,39 +349,35 @@ public final class TodoServlet extends HttpServlet {
                 );
         }
 
-    private void renderFormWithErrors(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Todo todo,
-            Map<String, String> errors,
-            String mode)
-            throws ServletException,
-                   IOException {
+        private void renderForm(
+                HttpServletRequest request,
+                HttpServletResponse response,
+                Todo todo,
+                Map<String, String> errors,
+                String mode)
+                throws IOException {
 
-        request.setAttribute(
-                "todo",
-                todo
-        );
+                response.setContentType("text/html; charset=UTF-8");
+                WebContext context = new WebContext(webApplication.buildExchange(request, response), request.getLocale());
 
-        request.setAttribute(
-                "errors",
-                errors
-        );
+                context.setVariable("mode", mode);
+                context.setVariable("todo", todo);
+                context.setVariable("errors", errors);
+                // Todo.Status.values() を渡すので、プルダウンが生成される
+                context.setVariable("statuses", Todo.Status.values());
+                context.setVariable("csrfToken", request.getAttribute("csrfToken"));
+                templateEngine.process("form", context, response.getWriter());
+        }
 
-        request.setAttribute(
-                "mode",
-                mode
-        );
-
-        request
-                .getRequestDispatcher(
-                        "/WEB-INF/views/form.jsp"
-                )
-                .forward(
-                        request,
-                        response
-                );
-    }
+        private void renderFormWithErrors(
+                HttpServletRequest request,
+                HttpServletResponse response,
+                Todo todo,
+                Map<String, String> errors,
+                String mode)
+                throws IOException {
+                renderForm(request, response, todo, errors, mode);
+        }
 
         private long parseId(HttpServletRequest request) {
                 String value = request.getParameter("id");
@@ -435,16 +400,11 @@ public final class TodoServlet extends HttpServlet {
                 }
         }
 
-    private void redirectToList(
-            HttpServletRequest request,
-            HttpServletResponse response)
-            throws IOException {
-
-        response.sendRedirect(
-                request.getContextPath()
-                        + "/todos"
-        );
-    }
+        // Todoの一覧画面にリダイレクトするためのメソッド
+        private void redirectToList(HttpServletRequest request, HttpServletResponse response, long listId)
+                throws IOException {
+        response.sendRedirect(request.getContextPath() + "/todos?listId=" + listId);
+        }
 
     private void handleDatabaseError(
             RepositoryException e) {
