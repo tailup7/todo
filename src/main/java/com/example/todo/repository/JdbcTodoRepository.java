@@ -38,7 +38,7 @@ public final class JdbcTodoRepository implements TodoRepository {
     public List<Todo> findAll() {
 
         String sql = SELECT_COLUMNS + """
-                 ORDER BY id DESC
+                ORDER BY id DESC
                 """;
 
         List<Todo> todos = new ArrayList<>();
@@ -92,6 +92,49 @@ public final class JdbcTodoRepository implements TodoRepository {
         } catch (SQLException e) {
             throw new RepositoryException("Failed to find todo: " + id, e);
         }
+    }
+
+    @Override
+    public List<Todo> findByListIdAndUserId(long listId, long userId) {
+
+        String sql = """
+                SELECT
+                    t.id,
+                    t.list_id,
+                    t.title,
+                    t.description,
+                    t.status,
+                    t.created_at,
+                    t.updated_at
+                FROM todos t
+                INNER JOIN todos_list tl
+                    ON tl.id = t.list_id
+                WHERE t.list_id = ?
+                    AND tl.user_id = ?
+                ORDER BY t.id DESC
+                """;
+
+        List<Todo> todos = new ArrayList<>();
+
+        try (
+                Connection connection = connectionProvider.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)
+        ) {
+            statement.setLong(1, listId);
+            statement.setLong(2, userId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    todos.add(map(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RepositoryException(
+                    "Failed to find todos for list: " + listId,
+                    e
+            );
+        }
+        return todos;
     }
 
     @Override

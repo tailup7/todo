@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Todo一覧</title>
+</head>
+
+<body>
+
+<h1>Todo一覧</h1>
+
+<p>
+    <a th:href="@{/todos/new(listId=${listId})}">
+        新しいTodoを追加
+    </a>
+</p>
+
+<p th:if="${#lists.isEmpty(todos)}">
+    Todo はありません。
+</p>
+
+<table
+    th:if="${!#lists.isEmpty(todos)}"
+    border="1"
+>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>タイトル</th>
+        <th>説明</th>
+        <th>状態</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="todo : ${todos}">
+        <td th:text="${todo.id}">1</td>
+        <td th:text="${todo.title}">タイトル</td>
+        <td th:text="${todo.description}">説明</td>
+        <td th:text="${todo.status.label}">未開始</td>
+
+        <td>
+            <a th:href="@{/todos/edit(
+                    id=${todo.id},
+                    listId=${listId}
+            )}">
+                編集
+            </a>
+
+            <form
+                th:action="@{/todos/delete}"
+                method="post"
+                style="display:inline"
+            >
+                <input
+                    type="hidden"
+                    name="_csrf"
+                    th:value="${csrfToken}"
+                >
+
+                <input
+                    type="hidden"
+                    name="id"
+                    th:value="${todo.id}"
+                >
+
+                <input
+                    type="hidden"
+                    name="listId"
+                    th:value="${listId}"
+                >
+
+                <button type="submit">
+                    削除
+                </button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p>
+    <a th:href="@{/lists}">
+        リスト一覧へ戻る
+    </a>
+</p>
+
+</body>
+</html>

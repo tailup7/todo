@@ -11,6 +11,8 @@ public interface TodoService {
 
     Todo findById(long id);
 
+    List<Todo> findByListIdAndUserId(long listId, long userId);
+
     void create(Todo todo);
 
     void update(long id, Todo todo);

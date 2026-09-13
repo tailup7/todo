@@ -142,7 +142,7 @@
         <a
             class="list-card"
             th:each="todoList : ${todoLists}"
-            th:href="@{/todos}"
+            th:href="@{/todos(listId=${todoList.id})}"
         >
             <h2 th:text="${todoList.listName}">
                 リスト名

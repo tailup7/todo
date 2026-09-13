@@ -23,8 +23,12 @@ public final class TodoServiceImpl
 
     @Override
     public Todo findById(long id) {
-        return todoRepository.findById(id)
-                .orElseThrow(() -> new TodoNotFoundException(id));
+        return todoRepository.findById(id).orElseThrow(() -> new TodoNotFoundException(id));
+    }
+
+    @Override
+    public List<Todo> findByListIdAndUserId(long listId, long userId) {
+        return todoRepository.findByListIdAndUserId(listId, userId);
     }
 
     @Override

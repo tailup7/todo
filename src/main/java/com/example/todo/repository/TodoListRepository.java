@@ -7,4 +7,7 @@ import java.util.List;
 public interface TodoListRepository {
 
     List<TodoList> findByUserId(long userId);
+
+    boolean existsByIdAndUserId(long listId, long userId);
+
 }

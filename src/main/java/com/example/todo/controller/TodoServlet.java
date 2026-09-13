@@ -2,17 +2,23 @@
 
 package com.example.todo.controller;
 
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.WebContext;
+import org.thymeleaf.web.servlet.JakartaServletWebApplication;
+
 import com.example.todo.model.Todo;
 import com.example.todo.repository.RepositoryException;
 import com.example.todo.service.TodoNotFoundException;
 import com.example.todo.service.TodoService;
 import com.example.todo.service.ValidationException;
+import com.example.todo.repository.TodoListRepository;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -23,8 +29,12 @@ import java.util.Map;
 @WebServlet(urlPatterns = "/todos/*")
 // extendsは、継承を意味する。HttpServletを継承している。
 public final class TodoServlet extends HttpServlet {
-        // メンバ変数todoServiceの宣言
+
         private TodoService todoService;
+        private TodoListRepository todoListRepository;
+        private TemplateEngine templateEngine;
+        private JakartaServletWebApplication webApplication;
+
         // overrideは、親クラス(今回はHttpSevlet)のメソッドを子クラス側で定義しなおすこと。
         @Override
         // initメソッド : Tomcatによって生成されたServletを、利用可能な状態に初期化する。
@@ -62,6 +72,23 @@ public final class TodoServlet extends HttpServlet {
                         throw new ServletException("TodoService is not initialized");
                 }
                 this.todoService = (TodoService) value;
+
+                Object listRepositoryValue = getServletContext().getAttribute("todoListRepository");
+
+                if (!(listRepositoryValue instanceof TodoListRepository)) {
+                        throw new ServletException("TodoListRepository is not initialized");
+                }
+
+                todoListRepository = (TodoListRepository) listRepositoryValue;
+
+                Object templateEngineValue = getServletContext().getAttribute("templateEngine");
+
+                if (!(templateEngineValue instanceof TemplateEngine)) {
+                        throw new ServletException("TemplateEngine is not initialized");
+                }
+
+                templateEngine = (TemplateEngine) templateEngineValue;
+                webApplication = JakartaServletWebApplication.buildApplication(getServletContext());
         }
 
         // GETメソッド。
@@ -154,9 +181,21 @@ public final class TodoServlet extends HttpServlet {
         // "/todos"にアクセスしたときに、todoの一覧を表示するためのメソッド
         private void showList(HttpServletRequest request,HttpServletResponse response)
                 throws ServletException, IOException {
-                request.setAttribute("todos", todoService.findAll());
-                request.getRequestDispatcher("/WEB-INF/views/list.jsp").forward(request, response);
+                long userId = getAuthenticatedUserId(request);
+                long listId = parseListId(request);
+                if (!todoListRepository.existsByIdAndUserId(listId, userId)) {
+                        // 存在しないリストと他人のリストを同じ扱いにする
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                        return;
+                }
+                response.setContentType("text/html; charset=UTF-8");
+                WebContext context = new WebContext(webApplication.buildExchange(request, response), request.getLocale());
+                context.setVariable("todos", todoService.findByListIdAndUserId(listId, userId));
+                context.setVariable("listId", listId);
+                context.setVariable("csrfToken", request.getAttribute("csrfToken"));
+                templateEngine.process("todos", context, response.getWriter());
         }
+        
 
     private void showCreateForm(
             HttpServletRequest request,
@@ -416,24 +455,30 @@ public final class TodoServlet extends HttpServlet {
         );
     }
 
-    private String normalizePath(
-            String path) {
-
-        if (path == null
-                || path.isBlank()
-                || "/".equals(path)) {
-
-            return "/";
+        // パスを正規化する補助メソッド。
+        private String normalizePath(String path) {
+                if (path == null || path.isBlank() || "/".equals(path)) {
+                        return "/";
+                } 
+                return path;
         }
 
-        return path;
-    }
-
-    private String trim(String value) {
-
+        // 文字列の前後の空白を削除する補助メソッド。
+        private String trim(String value) {
         return value == null
                 ? ""
                 : value.trim();
-    }
+        }
+
+        // showListメソッドで使う補助メソッド。
+        private long getAuthenticatedUserId(HttpServletRequest request)
+        throws ServletException {
+                HttpSession session = request.getSession(false);
+                if (session == null || !(session.getAttribute("authenticatedUserId") instanceof Long userId)) {
+                        throw new ServletException("Authenticated user is not available");
+                }
+                return userId;
+        }
+
 }
 

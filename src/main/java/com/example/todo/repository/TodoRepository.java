@@ -14,6 +14,8 @@ public interface TodoRepository {
 
     Optional<Todo> findById(long id);
 
+    List<Todo> findByListIdAndUserId(long listId, long userId);
+
     void create(Todo todo);
 
     boolean update(Todo todo);

@@ -18,9 +18,7 @@ public final class JdbcTodoListRepository
 
     private final ConnectionProvider connectionProvider;
 
-    public JdbcTodoListRepository(
-            ConnectionProvider connectionProvider) {
-
+    public JdbcTodoListRepository(ConnectionProvider connectionProvider) {
         this.connectionProvider = connectionProvider;
     }
 
@@ -64,6 +62,37 @@ public final class JdbcTodoListRepository
         }
 
         return todoLists;
+    }
+
+    @Override
+    public boolean existsByIdAndUserId(long listId, long userId) {
+
+        String sql = """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM todos_list
+                    WHERE id = ?
+                    AND user_id = ?
+                )
+                """;
+
+        try (
+                Connection connection = connectionProvider.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)
+        ) {
+            statement.setLong(1, listId);
+            statement.setLong(2, userId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getBoolean(1);
+            }
+        } catch (SQLException e) {
+            throw new RepositoryException(
+                    "Failed to verify todo list ownership",
+                    e
+            );
+        }
     }
 
     private TodoList map(ResultSet resultSet)
