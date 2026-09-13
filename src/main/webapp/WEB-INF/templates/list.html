@@ -44,6 +44,10 @@
             margin: 0;
         }
 
+        .logout-form {
+            margin: 0;
+        }
+
         .logout-button {
             background: #ffffff;
             border: 1px solid #94a3b8;
@@ -105,19 +109,45 @@
 <main class="page">
     <header class="page-header">
         <h1>リスト</h1>
-
-        <!-- ログアウト処理は未実装のため、画面上のボタンのみ表示する。 -->
-        <button class="logout-button" type="button">
-            ログアウト
-        </button>
+    <!--
+        ブラウザからPOSTメソッドを送るとき(ユーザが何かしらボタンなどを押してサーバに情報を送るとき)、
+        必ず送信先となるURLが必要。そのURLは、必ずしも画面として実装されていなくても良い。
+        ここでは、ログアウトボタンを押したときにPOSTメソッドで送信するURLとして、/logout を指定している。
+    -->
+        <form class="logout-form" th:action="@{/logout}" method="post">
+            <input
+                type="hidden"
+                name="_csrf"
+                th:value="${csrfToken}"
+            >
+    
+            <button class="logout-button" type="submit">
+                ログアウト
+            </button>
+        </form>
     </header>
 
-    <p class="lead">開くリストを選択してください。</p>
+    <p
+        class="lead"
+        th:if="${#lists.isEmpty(todoLists)}"
+    >
+        リストはまだありません。
+    </p>
 
-    <section class="list-grid" aria-label="Todo リスト">
-        <!-- 現時点ではモックのカード。リスト取得機能の実装後に th:each へ置き換える。 -->
-        <a class="list-card" href="todos">
-            <h2>todos</h2>
+    <section
+        class="list-grid"
+        aria-label="Todo リスト"
+        th:if="${!#lists.isEmpty(todoLists)}"
+    >
+        <a
+            class="list-card"
+            th:each="todoList : ${todoLists}"
+            th:href="@{/todos}"
+        >
+            <h2 th:text="${todoList.listName}">
+                リスト名
+            </h2>
+
             <p>Todo を確認・編集する</p>
         </a>
     </section>

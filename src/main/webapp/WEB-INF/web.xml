@@ -47,7 +47,6 @@
     </filter>
 
     <filter>
-
         <filter-name>
             CsrfFilter
         </filter-name>
@@ -55,26 +54,35 @@
         <filter-class>
             com.example.todo.web.CsrfFilter
         </filter-class>
-
     </filter>
 
     <filter-mapping>
         <filter-name>
             AuthenticationFilter
         </filter-name>
-    
+
         <url-pattern>
             /lists
         </url-pattern>
     </filter-mapping>
-    
+
     <filter-mapping>
         <filter-name>
             AuthenticationFilter
         </filter-name>
-    
+
         <url-pattern>
             /todos/*
+        </url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>
+            AuthenticationFilter
+        </filter-name>
+
+        <url-pattern>
+            /logout
         </url-pattern>
     </filter-mapping>
 
@@ -95,6 +103,26 @@
 
         <url-pattern>
             /login
+        </url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>
+            CsrfFilter
+        </filter-name>
+    
+        <url-pattern>
+            /lists
+        </url-pattern>
+    </filter-mapping>
+    
+    <filter-mapping>
+        <filter-name>
+            CsrfFilter
+        </filter-name>
+    
+        <url-pattern>
+            /logout
         </url-pattern>
     </filter-mapping>
 

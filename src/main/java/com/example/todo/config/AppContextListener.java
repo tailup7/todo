@@ -1,9 +1,13 @@
+// Springにおける @configuration クラス + @Bean メソッド + アプリ起動時の初期化処理 をまとめて手書きしているようなファイル
+
 package com.example.todo.config;
 
 import com.example.todo.database.ConnectionProvider;
 import com.example.todo.database.Database;
+import com.example.todo.repository.JdbcTodoListRepository;
 import com.example.todo.repository.JdbcTodoRepository;
 import com.example.todo.repository.JdbcUserAccountRepository;
+import com.example.todo.repository.TodoListRepository;
 import com.example.todo.repository.TodoRepository;
 import com.example.todo.repository.UserAccountRepository;
 import com.example.todo.security.BCryptPasswordHasher;
@@ -29,6 +33,7 @@ public final class AppContextListener implements ServletContextListener {
                 ServletContext context = event.getServletContext();
                 try {
                         ConnectionProvider connectionProvider =Database.create(context);
+                        TodoListRepository todoListRepository = new JdbcTodoListRepository(connectionProvider);
                         TodoRepository todoRepository = new JdbcTodoRepository(connectionProvider);
                         TodoService todoService = new TodoServiceImpl(todoRepository);
                         UserAccountRepository userAccountRepository = new JdbcUserAccountRepository(connectionProvider);
@@ -36,6 +41,7 @@ public final class AppContextListener implements ServletContextListener {
                         AuthService authService = new AuthServiceImpl(userAccountRepository, passwordHasher);
 
                         context.setAttribute("todoService", todoService);
+                        context.setAttribute("todoListRepository", todoListRepository);
                         context.setAttribute("authService", authService);
                         context.setAttribute("templateEngine", createTemplateEngine(context));
                         context.log("Todo application initialized");
