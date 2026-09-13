@@ -78,7 +78,7 @@ todo/
 ## DB接続
 このアプリケーションでは、PostgreSQLへの接続方法として`direct`と`jndi`の2種類を利用できる。
 
-- 方法1: direct
+- 方法1: direct (推奨?)
     1. DriverManagerを使用してPostgreSQLへ直接接続する
         - PowerShellで以下の環境変数を設定する
           ```

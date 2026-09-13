@@ -37,6 +37,16 @@
     </listener>
 
     <filter>
+        <filter-name>
+            AuthenticationFilter
+        </filter-name>
+
+        <filter-class>
+            com.example.todo.web.AuthenticationFilter
+        </filter-class>
+    </filter>
+
+    <filter>
 
         <filter-name>
             CsrfFilter
@@ -47,6 +57,26 @@
         </filter-class>
 
     </filter>
+
+    <filter-mapping>
+        <filter-name>
+            AuthenticationFilter
+        </filter-name>
+    
+        <url-pattern>
+            /lists
+        </url-pattern>
+    </filter-mapping>
+    
+    <filter-mapping>
+        <filter-name>
+            AuthenticationFilter
+        </filter-name>
+    
+        <url-pattern>
+            /todos/*
+        </url-pattern>
+    </filter-mapping>
 
     <filter-mapping>
         <filter-name>
