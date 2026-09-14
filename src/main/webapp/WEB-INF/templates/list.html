@@ -109,24 +109,39 @@
 <main class="page">
     <header class="page-header">
         <h1>リスト</h1>
-    <!--
-        ブラウザからPOSTメソッドを送るとき(ユーザが何かしらボタンなどを押してサーバに情報を送るとき)、
-        必ず送信先となるURLが必要。そのURLは、必ずしも画面として実装されていなくても良い。
-        ここでは、ログアウトボタンを押したときにPOSTメソッドで送信するURLとして、/logout を指定している。
-    -->
-        <form class="logout-form" th:action="@{/logout}" method="post">
-            <input
-                type="hidden"
-                name="_csrf"
-                th:value="${csrfToken}"
+        <div class="header-actions">
+        <!--
+            ブラウザからPOSTメソッドを送るとき(ユーザが何かしらボタンなどを押してサーバに情報を送るとき)、
+            必ず送信先となるURLが必要。そのURLは、必ずしも画面として実装されていなくても良い。
+            ここでは、ログアウトボタンを押したときにPOSTメソッドで送信するURLとして、/logout を指定している。
+        -->
+            <a
+            class="new-list-button"
+            th:href="@{/lists/new}"
             >
-    
-            <button class="logout-button" type="submit">
-                ログアウト
-            </button>
-        </form>
-    </header>
+                新規作成
+            </a>
 
+            <form
+                class="logout-form"
+                th:action="@{/logout}"
+                method="post"
+            >
+                <input
+                    type="hidden"
+                    name="_csrf"
+                    th:value="${csrfToken}"
+                >
+
+                <button
+                    class="logout-button"
+                    type="submit"
+                >
+                    ログアウト
+                </button>
+            </form>
+        </div>
+    </header>
     <p
         class="lead"
         th:if="${#lists.isEmpty(todoLists)}"
@@ -139,17 +154,54 @@
         aria-label="Todo リスト"
         th:if="${!#lists.isEmpty(todoLists)}"
     >
-        <a
+        <article
             class="list-card"
             th:each="todoList : ${todoLists}"
-            th:href="@{/todos(listId=${todoList.id})}"
         >
-            <h2 th:text="${todoList.listName}">
-                リスト名
-            </h2>
-
-            <p>Todo を確認・編集する</p>
-        </a>
+            <a
+                class="list-link"
+                th:href="@{/todos(listId=${todoList.id})}"
+            >
+                <h2 th:text="${todoList.listName}">
+                    リスト名
+                </h2>
+            </a>
+        
+            <div class="list-actions">
+                <a
+                    class="rename-link"
+                    th:href="@{/lists/edit(id=${todoList.id})}"
+                >
+                    名前を変更
+                </a>
+            
+                <form
+                    class="delete-form"
+                    th:action="@{/lists/delete}"
+                    method="post"
+                >
+                    <input
+                        type="hidden"
+                        name="_csrf"
+                        th:value="${csrfToken}"
+                    >
+            
+                    <input
+                        type="hidden"
+                        name="id"
+                        th:value="${todoList.id}"
+                    >
+            
+                    <button
+                        class="delete-button"
+                        type="submit"
+                        onclick="return confirm('このリストと、その中のTodoをすべて削除します。よろしいですか？');"
+                    >
+                        削除
+                    </button>
+                </form>
+            </div>
+        </article>
     </section>
 </main>
 

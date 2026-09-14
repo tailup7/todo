@@ -72,6 +72,26 @@
         </filter-name>
 
         <url-pattern>
+            /lists/*
+        </url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>
+            CsrfFilter
+        </filter-name>
+    
+        <url-pattern>
+            /lists/*
+        </url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>
+            AuthenticationFilter
+        </filter-name>
+
+        <url-pattern>
             /todos/*
         </url-pattern>
     </filter-mapping>
@@ -110,17 +130,17 @@
         <filter-name>
             CsrfFilter
         </filter-name>
-    
+
         <url-pattern>
             /lists
         </url-pattern>
     </filter-mapping>
-    
+
     <filter-mapping>
         <filter-name>
             CsrfFilter
         </filter-name>
-    
+
         <url-pattern>
             /logout
         </url-pattern>

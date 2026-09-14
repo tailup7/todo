@@ -12,6 +12,7 @@ import java.time.Instant;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public final class JdbcTodoListRepository
         implements TodoListRepository {
@@ -65,6 +66,43 @@ public final class JdbcTodoListRepository
     }
 
     @Override
+    public Optional<TodoList> findByIdAndUserId(long listId, long userId) {
+
+        String sql = """
+                SELECT
+                    id,
+                    user_id,
+                    list_name,
+                    created_at
+                FROM todos_list
+                WHERE id = ?
+                  AND user_id = ?
+                """;
+
+        try (
+                Connection connection = connectionProvider.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)
+        ) {
+            statement.setLong(1, listId);
+            statement.setLong(2, userId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+
+                if (!resultSet.next()) {
+                    return Optional.empty();
+                }
+
+                return Optional.of(map(resultSet));
+            }
+        } catch (SQLException e) {
+            throw new RepositoryException(
+                    "Failed to find todo list: " + listId,
+                    e
+            );
+        }
+    }
+
+    @Override
     public boolean existsByIdAndUserId(long listId, long userId) {
 
         String sql = """
@@ -90,6 +128,95 @@ public final class JdbcTodoListRepository
         } catch (SQLException e) {
             throw new RepositoryException(
                     "Failed to verify todo list ownership",
+                    e
+            );
+        }
+    }
+    
+    @Override
+    public void create(long userId, String listName) {
+
+        String sql = """
+                INSERT INTO todos_list (
+                    user_id,
+                    list_name
+                )
+                VALUES (?, ?)
+                """;
+
+        try (
+                Connection connection = connectionProvider.getConnection();
+
+                PreparedStatement statement = connection.prepareStatement(sql)
+        ) {
+            statement.setLong(1, userId);
+            statement.setString(2, listName);
+
+            int updatedRows = statement.executeUpdate();
+
+            if (updatedRows != 1) {
+                throw new SQLException(
+                        "Unexpected inserted row count: "
+                                + updatedRows
+                );
+            }
+        } catch (SQLException e) {
+            throw new RepositoryException(
+                    "Failed to create todo list",
+                    e
+            );
+        }
+    }
+
+    @Override
+    public boolean updateName(long listId, long userId, String listName) {
+
+        String sql = """
+                UPDATE todos_list
+                SET list_name = ?
+                WHERE id = ?
+                  AND user_id = ?
+                """;
+
+        try (
+                Connection connection = connectionProvider.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)
+        ) {
+            statement.setString(1, listName);
+            statement.setLong(2, listId);
+            statement.setLong(3, userId);
+
+            return statement.executeUpdate() == 1;
+
+        } catch (SQLException e) {
+            throw new RepositoryException(
+                    "Failed to update todo list: " + listId,
+                    e
+            );
+        }
+    }
+
+    @Override
+    public boolean deleteByIdAndUserId(long listId, long userId) {
+
+        String sql = """
+                DELETE FROM todos_list
+                WHERE id = ?
+                  AND user_id = ?
+                """;
+
+        try (
+                Connection connection = connectionProvider.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)
+        ) {
+            statement.setLong(1, listId);
+            statement.setLong(2, userId);
+
+            return statement.executeUpdate() == 1;
+
+        } catch (SQLException e) {
+            throw new RepositoryException(
+                    "Failed to delete todo list: " + listId,
                     e
             );
         }

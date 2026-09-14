@@ -14,6 +14,8 @@ import com.example.todo.security.BCryptPasswordHasher;
 import com.example.todo.security.PasswordHasher;
 import com.example.todo.service.AuthService;
 import com.example.todo.service.AuthServiceImpl;
+import com.example.todo.service.TodoListService;
+import com.example.todo.service.TodoListServiceImpl;
 import com.example.todo.service.TodoService;
 import com.example.todo.service.TodoServiceImpl;
 
@@ -34,6 +36,7 @@ public final class AppContextListener implements ServletContextListener {
                 try {
                         ConnectionProvider connectionProvider =Database.create(context);
                         TodoListRepository todoListRepository = new JdbcTodoListRepository(connectionProvider);
+                        TodoListService todoListService = new TodoListServiceImpl(todoListRepository);
                         TodoRepository todoRepository = new JdbcTodoRepository(connectionProvider);
                         TodoService todoService = new TodoServiceImpl(todoRepository);
                         UserAccountRepository userAccountRepository = new JdbcUserAccountRepository(connectionProvider);
@@ -42,6 +45,7 @@ public final class AppContextListener implements ServletContextListener {
 
                         context.setAttribute("todoService", todoService);
                         context.setAttribute("todoListRepository", todoListRepository);
+                        context.setAttribute("todoListService", todoListService);
                         context.setAttribute("authService", authService);
                         context.setAttribute("templateEngine", createTemplateEngine(context));
                         context.log("Todo application initialized");
