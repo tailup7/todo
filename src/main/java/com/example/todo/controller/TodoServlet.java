@@ -13,6 +13,8 @@ import com.example.todo.service.TodoNotFoundException;
 import com.example.todo.service.TodoService;
 import com.example.todo.service.ValidationException;
 import com.example.todo.repository.TodoListRepository;
+import com.example.todo.web.DescriptionLinkifier;
+import com.example.todo.web.DescriptionPart;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.ServletException;
@@ -22,8 +24,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-
 import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 
 // @WebServletアノテーションは、TodoServletとURL(/todos/*)をマッピング
 // /todos ではなく /todos/* なのは、/todos配下の複数のURLをこのTodoServletに処理させるため。
@@ -182,19 +185,25 @@ public final class TodoServlet extends HttpServlet {
         // "/todos"にアクセスしたときに、todoの一覧を表示するためのメソッド
         private void showList(HttpServletRequest request,HttpServletResponse response)
                 throws ServletException, IOException {
-                        // TodoServlet.javaにて定義されているメソッド。
+                // TodoServlet.javaにて定義されているメソッド。
                 long userId = getAuthenticatedUserId(request); //セッションからログインユーザを取得
                 long listId = parseListId(request);
                 TodoList todoList = todoListRepository.findByIdAndUserId(listId, userId).orElse(null);
+                List<Todo> todos = todoService.findByListIdAndUserId(listId,userId);
+                Map<Long, List<DescriptionPart>> descriptionPartsByTodoId = new HashMap<>();
+                for (Todo todo : todos) {
+                        descriptionPartsByTodoId.put(todo.getId(), DescriptionLinkifier.split(todo.getDescription()));
+                }
 
                 if (todoList == null) {
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                    return;
+                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                        return;
                 }
                 response.setContentType("text/html; charset=UTF-8");
                 // WebContextは、Thymeleafのテンプレートエンジンに渡すためのコンテキスト情報を保持するクラス。
                 WebContext context = new WebContext(webApplication.buildExchange(request, response), request.getLocale());
-                context.setVariable("todos", todoService.findByListIdAndUserId(listId, userId));
+                context.setVariable("todos", todos);
+                context.setVariable("descriptionPartsByTodoId",descriptionPartsByTodoId);
                 context.setVariable("listId", listId);
                 context.setVariable("todoList", todoList);
                 context.setVariable("csrfToken", request.getAttribute("csrfToken"));
@@ -438,6 +447,7 @@ public final class TodoServlet extends HttpServlet {
         // showListメソッドで使う補助メソッド。
         private long getAuthenticatedUserId(HttpServletRequest request)
         throws ServletException {
+                // このリクエストに紐づく既存のセッションを取得し、session変数に入れる。falseは、セッションが存在しない場合、新しく作らないため。
                 HttpSession session = request.getSession(false);
                 if (session == null || !(session.getAttribute("authenticatedUserId") instanceof Long userId)) {
                         throw new ServletException("Authenticated user is not available");

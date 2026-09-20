@@ -38,7 +38,29 @@
     <tr th:each="todo : ${todos}">
         <td th:text="${todo.id}">1</td>
         <td th:text="${todo.title}">タイトル</td>
-        <td th:text="${todo.description}">説明</td>
+        <td style="white-space: pre-wrap;">
+            <th:block
+                th:each="part : ${descriptionPartsByTodoId[todo.id]}"
+            >
+                <a
+                    th:if="${part.link()}"
+                    th:href="${part.text()}"
+                    th:text="${part.text()}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    URL
+                </a>
+
+                <span
+                    th:unless="${part.link()}"
+                    th:text="${part.text()}"
+                >
+                    説明
+                </span>
+            </th:block>
+        </td>
+        
         <td th:text="${todo.status.label}">未開始</td>
 
         <td>
