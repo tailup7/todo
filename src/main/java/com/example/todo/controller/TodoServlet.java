@@ -7,6 +7,7 @@ import org.thymeleaf.context.WebContext;
 import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
 import com.example.todo.model.Todo;
+import com.example.todo.model.TodoList;
 import com.example.todo.repository.RepositoryException;
 import com.example.todo.service.TodoNotFoundException;
 import com.example.todo.service.TodoService;
@@ -181,17 +182,21 @@ public final class TodoServlet extends HttpServlet {
         // "/todos"にアクセスしたときに、todoの一覧を表示するためのメソッド
         private void showList(HttpServletRequest request,HttpServletResponse response)
                 throws ServletException, IOException {
-                long userId = getAuthenticatedUserId(request);
+                        // TodoServlet.javaにて定義されているメソッド。
+                long userId = getAuthenticatedUserId(request); //セッションからログインユーザを取得
                 long listId = parseListId(request);
-                if (!todoListRepository.existsByIdAndUserId(listId, userId)) {
-                        // 存在しないリストと他人のリストを同じ扱いにする
-                        response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                        return;
+                TodoList todoList = todoListRepository.findByIdAndUserId(listId, userId).orElse(null);
+
+                if (todoList == null) {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    return;
                 }
                 response.setContentType("text/html; charset=UTF-8");
+                // WebContextは、Thymeleafのテンプレートエンジンに渡すためのコンテキスト情報を保持するクラス。
                 WebContext context = new WebContext(webApplication.buildExchange(request, response), request.getLocale());
                 context.setVariable("todos", todoService.findByListIdAndUserId(listId, userId));
                 context.setVariable("listId", listId);
+                context.setVariable("todoList", todoList);
                 context.setVariable("csrfToken", request.getAttribute("csrfToken"));
                 templateEngine.process("todos", context, response.getWriter());
         }

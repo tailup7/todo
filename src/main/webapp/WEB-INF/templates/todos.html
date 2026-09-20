@@ -3,12 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Todo一覧</title>
+    <title th:text="${todoList.listName} + ' | Todo'">Todo一覧 | Todo</title>
 </head>
 
 <body>
 
-<h1>Todo一覧</h1>
+<h1 th:text="${todoList.listName}">Todo一覧</h1>
 
 <p>
     <a th:href="@{/todos/new(listId=${listId})}">
